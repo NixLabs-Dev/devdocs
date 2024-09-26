@@ -1,10 +1,9 @@
 import React from 'react'
 import { DocsThemeConfig } from 'nextra-theme-docs'
 import Image from "next/image"
-import Logo from "./res/logo.png"
 
 const config: DocsThemeConfig = {
-  logo: <Image src={Logo} alt='NixLabs Logo' width={35}/>,
+  logo: <img src="/logo.png" width={30}/>,
   project: {
     link: 'https://github.com/NixLabs-Dev',
   },
@@ -12,8 +11,28 @@ const config: DocsThemeConfig = {
     link: 'https://discord.gg/phEf3q2fFF',
   },
   footer: {
-    text: 'NixLabs Developer Docs',
+    text: (
+      <span>
+        Made with ❤️ by people, just like you
+        <br />
+        {new Date().getFullYear()} ©{" "}
+        <a href="https://nixlabs.dev" target="_blank">
+          NixLabs Networks
+        </a>
+      </span>
+    ),
   },
+
+  useNextSeoProps() {
+    return {
+      titleTemplate: '%s'
+    }
+  },
+  head: (
+    <>
+      <link rel="icon" href="/logo.png" sizes="any" />
+    </>
+  )
 }
 
 export default config
