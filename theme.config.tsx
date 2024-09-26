@@ -30,7 +30,7 @@ const config: DocsThemeConfig = {
   },
   head: (
     <>
-      <link rel="icon" href="/logo.png" sizes="any" />
+      <link rel="icon" type="image/png" href="/logo.png" />
     </>
   )
 }
