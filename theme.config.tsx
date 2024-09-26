@@ -9,7 +9,7 @@ const config: DocsThemeConfig = {
     link: 'https://github.com/NixLabs-Dev',
   },
   chat: {
-    link: 'https://discord.com',
+    link: 'https://discord.gg/phEf3q2fFF',
   },
   footer: {
     text: 'NixLabs Developer Docs',
