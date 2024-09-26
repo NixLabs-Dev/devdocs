@@ -1,0 +1,151 @@
+import Path from "../components/path.tsx"
+
+# Looking Glass API
+
+Are you a MSP, a programmer who likes data, or just a psychopath? Well then dive right into our Looking Glass API. This API provides all sorts of interesting data from any of our routers, in any of our POP's.
+
+# Overview
+All of our API's are JSON based and fully HTTP compliant. They return a single type of response that is outlined below. They also respond with valid HTPT status codes depending on the error condition that can easially be checked.
+## Response Format
+```ts
+type ResponseData = {
+  site: string;         // Previously passed site code
+  output: string|null;  // The raw command output (will be null if success=false)
+  success: boolean;     // Success state of the command on the server
+  timestamp: string;    // Timestamp of completion
+}
+```
+This is the type that is used in all of our API routes for response checking. We start by returning the site code passed, this way you can check where you went wrong in the case of a ``422`` invalid input error.
+
+Next we have the output, this will be raw console output formatted with the ``\n`` character to sybolize newlines. The success property is a boolean that will be ``true`` if the process exited successfully, and ``false`` if the process did not.Finally it returns a UNIX timestamp of the current time, this might be useful for checking if data is stale or not.
+
+## HTTP Response Codes
+| Code    | Response | Simple Explination|
+| -------- | ------- |-----|
+| 433      | Unprocessable Entity   | One of the parameters passed to the route was missing, invalid, or an incorrect data-type.     |
+| 500 | Internal Server Error     | The server encountered a backend issue while processing the request. This is typically an us issue, not a you issue. |
+| 200    |  Success   | The command was successful, and output should be expected. |
+
+# Available Routes
+## Traceroute
+This route is able to perform a traceroute on any host on any of our routers to a specified IP Address or Hostname. Below is the request and response parameter definitions.
+```ts
+//Request parameters
+type RequestData = {
+  site: string; // Must be a valid site code. 
+                // Site codes can be viewed at /api/sites endpoint.
+
+  host: string; // This can be either a IP, IP+CIDR, or HOST.
+}
+```
+
+Below is an example of a response for a traceroute to 1.1.1.1 from the ``hopky`` site code.
+```json
+Example API Response
+
+{
+  "output": "traceroute to 1.1.1.1 (1.1.1.1), 30 hops max, 60 byte packets\n 1  38-244-255-66.hesenergy.net (66.255.244.38)  0.163 ms  0.154 ms  0.164 ms\n 2  213-255-255-66.hesenergy.net (66.255.255.213)  0.662 ms  0.583 ms  0.525 ms\n 3  h65.50.128.40.static.ip.windstream.net (40.128.50.65)  11.868 ms  11.823 ms  11.786 ms\n 4  ae5-0.pe10.chcg01-il.us.windstream.net (40.128.10.146)  17.696 ms  17.662 ms  17.726 ms\n 5  * * *\n 6  eqix-ch2.cloudfare-02.com (208.115.137.77)  18.737 ms  25.331 ms  25.306 ms\n 7  141.101.73.210 (141.101.73.210)  18.423 ms 141.101.73.218 (141.101.73.218)  17.241 ms 141.101.73.220 (141.101.73.220)  15.587 ms\n 8  one.one.one.one (1.1.1.1)  17.968 ms  17.903 ms  18.467 ms",
+  "site": "hopky",
+  "success": true,
+  "timestamp": "1727313086028"
+}
+```
+
+An expanded form of the output of the previous command can be seen here
+```
+traceroute to 1.1.1.1 (1.1.1.1), 30 hops max, 60 byte packets
+ 1  38-244-255-66.hesenergy.net (66.255.244.38)  0.163 ms  0.154 ms  0.164 ms
+ 2  213-255-255-66.hesenergy.net (66.255.255.213)  0.662 ms  0.583 ms  0.525 ms
+ 3  h65.50.128.40.static.ip.windstream.net (40.128.50.65)  11.868 ms  11.823 ms  11.786 ms
+ 4  ae5-0.pe10.chcg01-il.us.windstream.net (40.128.10.146)  17.696 ms  17.662 ms  17.726 ms
+ 5  * * *
+ 6  eqix-ch2.cloudfare-02.com (208.115.137.77)  18.737 ms  25.331 ms  25.306 ms
+ 7  141.101.73.210 (141.101.73.210)  18.423 ms 141.101.73.218 (141.101.73.218)  17.241 ms 141.101.73.220 (141.101.73.220)  15.587 ms
+ 8  one.one.one.one (1.1.1.1)  17.968 ms  17.903 ms  18.467 ms
+```
+
+## Ping
+This route is able to perform a ping from any host on any of our routers to a specified IP Address or Hostname. Below is the request and response parameter definitions
+```ts
+//Request parameters
+type RequestData = {
+  site: string; // Must be a valid site code. 
+                // Site codes can be viewed at /api/sites endpoint.
+                
+  host: string; // This can be either a IP, IP+CIDR, or HOST.
+}
+```
+
+here is an example CURL command that performs a ping to 1.1.1.1 from Hopkinsville, KY
+```bash
+curl 'https://lg.nixlabs.dev/api/ping?host=1.1.1.1&site=hopky'
+```
+
+Here is what that response should look like to 1.1.1.1 from the ``hopky`` site code.
+```json
+Example API Response
+
+{
+  "output": "PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.\n64 bytes from 1.1.1.1: icmp_seq=1 ttl=57 time=17.7 ms\n64 bytes from 1.1.1.1: icmp_seq=2 ttl=57 time=17.9 ms\n64 bytes from 1.1.1.1: icmp_seq=3 ttl=57 time=17.8 ms\n64 bytes from 1.1.1.1: icmp_seq=4 ttl=57 time=17.7 ms\n64 bytes from 1.1.1.1: icmp_seq=5 ttl=57 time=17.8 ms\n\n--- 1.1.1.1 ping statistics ---\n5 packets transmitted, 5 received, 0% packet loss, time 4008ms\nrtt min/avg/max/mdev = 17.706/17.766/17.860/0.052 ms",
+  "site": "hopky",
+  "success": true,
+  "timestamp": "1727324860945"
+}
+```
+
+This is the output after processing it and removing the newlines
+```
+PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
+64 bytes from 1.1.1.1: icmp_seq=1 ttl=57 time=17.7 ms
+64 bytes from 1.1.1.1: icmp_seq=2 ttl=57 time=17.9 ms
+64 bytes from 1.1.1.1: icmp_seq=3 ttl=57 time=17.8 ms
+64 bytes from 1.1.1.1: icmp_seq=4 ttl=57 time=17.7 ms
+64 bytes from 1.1.1.1: icmp_seq=5 ttl=57 time=17.8 ms
+
+--- 1.1.1.1 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4008ms
+rtt min/avg/max/mdev = 17.706/17.766/17.860/0.052 ms
+```
+
+
+
+## BGP
+This route is able to perform a BGP route lookup from any host on any of our routers to a specified IP Address or Hostname. Below is the request and response parameter definitions
+```ts
+//Request parameters
+type RequestData = {
+  site: string; // Must be a valid site code. 
+                // Site codes can be viewed at /api/sites endpoint.
+                
+  host: string; // This can be either a IP, IP+CIDR, or HOST.
+}
+```
+
+here is an example CURL command that performs a ping to 1.1.1.1 from Hopkinsville, KY
+```bash
+curl 'https://lg.nixlabs.dev/api/bgp?host=1.1.1.1&site=hopky'
+```
+
+Here is what that response should look like to 1.1.1.1 from the ``hopky`` site code.
+```json
+Example API Response
+{
+  "output": "BGP routing table entry for 1.1.1.0/24, version 13910002\nPaths: (1 available, best #1, table default)\n  31867 13781 7029 13335, (aggregated by 13335 10.34.3.248)\n    162.213.130.2 from 162.213.130.2 (162.213.130.249)\n      Origin IGP, valid, external, best (First path received), rpki validation-state: valid\n      AddPath ID: RX 240862, TX-All 1891328 TX-Best-Per-AS 0 TX-Best-Selected 0\n      Advertised to: 74.113.97.25\n      Last update: Tue Sep 24 16:37:45 2024",
+  "site": "hopky",
+  "success": true,
+  "timestamp": "1727324992194"
+}
+```
+
+This is the output after processing it and removing the newlines
+```
+BGP routing table entry for 1.1.1.0/24, version 13910002
+Paths: (1 available, best #1, table default)
+  31867 13781 7029 13335, (aggregated by 13335 10.34.3.248)
+    162.213.130.2 from 162.213.130.2 (162.213.130.249)
+      Origin IGP, valid, external, best (First path received), rpki validation-state: valid
+      AddPath ID: RX 240862, TX-All 1891328 TX-Best-Per-AS 0 TX-Best-Selected 0
+      Advertised to: 74.113.97.25
+      Last update: Tue Sep 24 16:37:45 2024
+```
+

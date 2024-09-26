@@ -1,0 +1,16 @@
+.headingContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: center;
+}
+
+
+.badge {
+  background-color: #16A34A;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 5px;
+
+  font-size: large;
+}
