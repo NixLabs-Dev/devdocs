@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+ name: devdocs
+ namespace: nixlabs
+ annotations:
+   cert-manager.io/issuer: "le-production"
+spec:
+ tls:
+   - hosts:
+       - lg.nixlabs.dev
+     secretName: tls-devdocs-ingress-http
+ rules:
+   - host: lg.nixlabs.dev
+     http:
+       paths:
+         - path: /
+           pathType: Prefix
+           backend:
+             service:
+               name: devdocs
+               port:
+                 name: web
